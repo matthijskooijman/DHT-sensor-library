@@ -6,18 +6,22 @@ written by Adafruit Industries
 
 #include "DHT.h"
 
+#define MIN_INTERVAL 2000
+
 DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
   _pin = pin;
   _type = type;
   _count = count;
-  firstreading = true;
 }
 
 void DHT::begin(void) {
   // set up the pins!
   pinMode(_pin, INPUT);
   digitalWrite(_pin, HIGH);
-  _lastreadtime = 0;
+  // Using this value makes sure that millis() - lastreadtime will be
+  // >= MIN_INTERVAL right away. Note that this assignment wraps around,
+  // but so will the subtraction.
+  _lastreadtime = -MIN_INTERVAL;
 }
 
 //boolean S == Scale.  True == Farenheit; False == Celcius
@@ -100,11 +104,10 @@ boolean DHT::read(bool force) {
   // Check if sensor was read less than two seconds ago and return early
   // to use last reading.
   currenttime = millis();
-  if (!force && !firstreading && ((currenttime - _lastreadtime) < 2000)) {
+  if (!force && ((currenttime - _lastreadtime) < MIN_INTERVAL)) {
     return true; // return last correct measurement
     //delay(2000 - (currenttime - _lastreadtime));
   }
-  firstreading = false;
   _lastreadtime = currenttime;
 
   data[0] = data[1] = data[2] = data[3] = data[4] = 0;
