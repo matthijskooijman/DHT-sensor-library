@@ -16,8 +16,7 @@ DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
 
 void DHT::begin(void) {
   // set up the pins!
-  pinMode(_pin, INPUT);
-  digitalWrite(_pin, HIGH);
+  pinMode(_pin, INPUT_PULLUP);
   // Using this value makes sure that millis() - lastreadtime will be
   // >= MIN_INTERVAL right away. Note that this assignment wraps around,
   // but so will the subtraction.
@@ -121,9 +120,8 @@ boolean DHT::read(bool force) {
   digitalWrite(_pin, LOW);
   delay(20);
   noInterrupts();
-  digitalWrite(_pin, HIGH);
+  pinMode(_pin, INPUT_PULLUP);
   delayMicroseconds(40);
-  pinMode(_pin, INPUT);
 
   // read in timings
   for ( i=0; i< MAXTIMINGS; i++) {
