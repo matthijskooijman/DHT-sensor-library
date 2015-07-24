@@ -22,7 +22,7 @@ written by Adafruit Industries
 
 class DHT {
  private:
-  uint8_t data[6];
+  uint8_t data[5];
   uint8_t _pin, _type, _count;
   unsigned long _lastreadtime;
 
