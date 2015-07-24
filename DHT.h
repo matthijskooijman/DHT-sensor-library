@@ -12,9 +12,6 @@ MIT license
 written by Adafruit Industries
 */
 
-// how many timing transitions we need to keep track of. 2 * number bits + extra
-#define MAXTIMINGS 85
-
 #define DHT11 11
 #define DHT22 22
 #define DHT21 21
@@ -23,11 +20,12 @@ written by Adafruit Industries
 class DHT {
  private:
   uint8_t data[5];
-  uint8_t _pin, _type, _count;
+  uint8_t _pin, _type;
   unsigned long _lastreadtime;
 
  public:
-  DHT(uint8_t pin, uint8_t type, uint8_t count=6);
+  // count is no longer used
+  DHT(uint8_t pin, uint8_t type, uint8_t count=0);
   void begin(void);
   float readTemperature(bool S=false, bool force=false);
   float convertCtoF(float);

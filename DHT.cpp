@@ -8,10 +8,9 @@ written by Adafruit Industries
 
 #define MIN_INTERVAL 2000
 
-DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
+DHT::DHT(uint8_t pin, uint8_t type, uint8_t) {
   _pin = pin;
   _type = type;
-  _count = count;
 }
 
 void DHT::begin(void) {
@@ -95,9 +94,6 @@ float DHT::computeHeatIndex(float tempFahrenheit, float percentHumidity) {
 
 
 boolean DHT::read(bool force) {
-  uint8_t laststate = HIGH;
-  uint8_t counter = 0;
-  uint8_t j = 0, i;
   unsigned long currenttime;
 
   // Check if sensor was read less than two seconds ago and return early
@@ -123,35 +119,34 @@ boolean DHT::read(bool force) {
   pinMode(_pin, INPUT_PULLUP);
   delayMicroseconds(40);
 
-  // read in timings
-  for ( i=0; i< MAXTIMINGS; i++) {
-    counter = 0;
-    while (digitalRead(_pin) == laststate) {
-      counter++;
-      delayMicroseconds(1);
-      if (counter == 255) {
-        break;
-      }
-    }
-    laststate = digitalRead(_pin);
+  // Sensor pulls low and high for 80uS each (so timeout should be >
+  // 80uS + 80uS)
+  if (!pulseIn(_pin, HIGH, /* timeout */ 200)) {
+    interrupts();
+    return false; // timeout
+  }
 
-    if (counter == 255) break;
+  // Now, the sensor pullse low for 50us and high for 26-28uS (0) or
+  // 70uS (1) (values for DHT22, others are similar).  Below loop
+  // measures the length of the high pulse and uses 50uS as a cutoff
+  // value.
+  for (uint8_t i = 0; i < sizeof(data) * 8; i++) {
+    // Timeout should be > 50uS + 70uS
+    uint8_t length = pulseIn(_pin, HIGH, 150);
 
-    // ignore first 3 transitions
-    if ((i >= 4) && (i%2 == 0)) {
-      // shove each bit into the storage bytes
-      data[j/8] <<= 1;
-      if (counter > _count)
-        data[j/8] |= 1;
-      j++;
+    if (!length) {
+      interrupts();
+      return false; // timeout
     }
 
+    data[i/8] <<= 1;
+    if (length > 50)
+      data[i/8] |= 1;
   }
 
   interrupts();
   
   /*
-  Serial.println(j, DEC);
   Serial.print(data[0], HEX); Serial.print(", ");
   Serial.print(data[1], HEX); Serial.print(", ");
   Serial.print(data[2], HEX); Serial.print(", ");
@@ -160,13 +155,8 @@ boolean DHT::read(bool force) {
   Serial.println(data[0] + data[1] + data[2] + data[3], HEX);
   */
 
-  // check we read 40 bits and that the checksum matches
-  if ((j >= 40) && 
-      (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) ) {
-    return true;
-  }
-  
-
-  return false;
+  // check that the checksum matches
+  uint8_t checksum = (data[0] + data[1] + data[2] + data[3]);
+  return (data[4] == checksum);
 
 }
