@@ -21,10 +21,10 @@ void DHT::begin(void) {
 }
 
 //boolean S == Scale.  True == Farenheit; False == Celcius
-float DHT::readTemperature(bool S) {
+float DHT::readTemperature(bool S, bool force) {
   float f;
 
-  if (read()) {
+  if (read(force)) {
     switch (_type) {
     case DHT11:
       f = data[2];
@@ -57,9 +57,9 @@ float DHT::convertFtoC(float f) {
   return (f - 32) * 5 / 9; 
 }
 
-float DHT::readHumidity(void) {
+float DHT::readHumidity(bool force) {
   float f;
-  if (read()) {
+  if (read(force)) {
     switch (_type) {
     case DHT11:
       f = data[0];
@@ -91,7 +91,7 @@ float DHT::computeHeatIndex(float tempFahrenheit, float percentHumidity) {
 }
 
 
-boolean DHT::read(void) {
+boolean DHT::read(bool force) {
   uint8_t laststate = HIGH;
   uint8_t counter = 0;
   uint8_t j = 0, i;
@@ -104,7 +104,7 @@ boolean DHT::read(void) {
     // ie there was a rollover
     _lastreadtime = 0;
   }
-  if (!firstreading && ((currenttime - _lastreadtime) < 2000)) {
+  if (!force && !firstreading && ((currenttime - _lastreadtime) < 2000)) {
     return true; // return last correct measurement
     //delay(2000 - (currenttime - _lastreadtime));
   }
