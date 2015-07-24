@@ -100,20 +100,12 @@ boolean DHT::read(bool force) {
   // Check if sensor was read less than two seconds ago and return early
   // to use last reading.
   currenttime = millis();
-  if (currenttime < _lastreadtime) {
-    // ie there was a rollover
-    _lastreadtime = 0;
-  }
   if (!force && !firstreading && ((currenttime - _lastreadtime) < 2000)) {
     return true; // return last correct measurement
     //delay(2000 - (currenttime - _lastreadtime));
   }
   firstreading = false;
-  /*
-    Serial.print("Currtime: "); Serial.print(currenttime);
-    Serial.print(" Lasttime: "); Serial.print(_lastreadtime);
-  */
-  _lastreadtime = millis();
+  _lastreadtime = currenttime;
 
   data[0] = data[1] = data[2] = data[3] = data[4] = 0;
   
